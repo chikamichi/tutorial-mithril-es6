@@ -30,9 +30,6 @@ Entry.create({
   ]
 })
 
-console.table(Entry.all())
-let list = new EntryList()
-
 m.route(document.getElementById('app'), '/', {
   '/': new EntryList(),
 

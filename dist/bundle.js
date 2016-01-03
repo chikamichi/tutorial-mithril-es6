@@ -1238,8 +1238,6 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       email: "erl@example.com"
     }]
   });
-  console.table(Entry.all());
-  var list = new _EntryList2.default();
 
   _mithril2.default.route(document.getElementById('app'), '/', {
     '/': new _EntryList2.default(),
