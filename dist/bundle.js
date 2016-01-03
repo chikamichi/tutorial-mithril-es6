@@ -1260,22 +1260,133 @@ else if (typeof define === "function" && define.amd) define(function() {return m
   });
 });
 
-},{"./components/EntryForm":3,"./components/EntryList":4,"./models/Entry":5,"mithril":1}],3:[function(require,module,exports){
+},{"./components/EntryForm":4,"./components/EntryList":5,"./models/Entry":8,"mithril":1}],3:[function(require,module,exports){
 'use strict';
 
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
-    define(['exports', 'mithril', '../models/Entry'], factory);
+    define(['exports', 'mithril'], factory);
   } else if (typeof exports !== "undefined") {
-    factory(exports, require('mithril'), require('../models/Entry'));
+    factory(exports, require('mithril'));
   } else {
     var mod = {
       exports: {}
     };
-    factory(mod.exports, global.mithril, global.Entry);
+    factory(mod.exports, global.mithril);
+    global.Coupon = mod.exports;
+  }
+})(this, function (exports, _mithril) {
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  var _mithril2 = _interopRequireDefault(_mithril);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = (function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  })();
+
+  var Coupon = (function () {
+    function Coupon() {
+      _classCallCheck(this, Coupon);
+    }
+
+    _createClass(Coupon, [{
+      key: 'controller',
+      value: function controller(attrs) {
+        var ctrl = this;
+        ctrl.code = '';
+        ctrl.error = null;
+
+        ctrl.submit = function (e) {
+          e.preventDefault();
+          ctrl.error = null;
+          validateCoupon(ctrl.code).then(function (discount) {
+            console.log('Coupon applied');
+            ctrl.code = '';
+            attrs.onSuccess(discount);
+          }).then(null, function (err) {
+            ctrl.error = err;
+          });
+        };
+      }
+    }, {
+      key: 'view',
+      value: function view(ctrl) {
+        return (0, _mithril2.default)('form.coupon', {
+          onsubmit: ctrl.submit
+        }, [ctrl.error ? [(0, _mithril2.default)('.error', 'Invalid coupon')] : null, (0, _mithril2.default)('label', 'Enter coupon code (if you have one): '), (0, _mithril2.default)('input[type=text]', {
+          value: ctrl.code,
+          onchange: function onchange(e) {
+            ctrl.code = e.currentTarget.value;
+          }
+        }), (0, _mithril2.default)('button[type=submit]', 'Validate coupon')]);
+      }
+    }]);
+
+    return Coupon;
+  })();
+
+  exports.default = Coupon;
+
+  var validateCoupon = function validateCoupon(code) {
+    var isValid = code == 'happy';
+    var discount = 0.20;
+
+    var deferred = _mithril2.default.deferred();
+
+    if (isValid) {
+      deferred.resolve(discount);
+    } else {
+      deferred.reject('invalid code');
+    }
+
+    return deferred.promise;
+  };
+});
+
+},{"mithril":1}],4:[function(require,module,exports){
+'use strict';
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(['exports', 'mithril', '../models/Entry', '../components/Volunteers', '../components/Total', '../components/Coupon'], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require('mithril'), require('../models/Entry'), require('../components/Volunteers'), require('../components/Total'), require('../components/Coupon'));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.mithril, global.Entry, global.Volunteers, global.Total, global.Coupon);
     global.EntryForm = mod.exports;
   }
-})(this, function (exports, _mithril, _Entry) {
+})(this, function (exports, _mithril, _Entry, _Volunteers, _Total, _Coupon) {
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
@@ -1283,6 +1394,12 @@ else if (typeof define === "function" && define.amd) define(function() {return m
   var _mithril2 = _interopRequireDefault(_mithril);
 
   var Entry = _interopRequireWildcard(_Entry);
+
+  var _Volunteers2 = _interopRequireDefault(_Volunteers);
+
+  var _Total2 = _interopRequireDefault(_Total);
+
+  var _Coupon2 = _interopRequireDefault(_Coupon);
 
   function _interopRequireWildcard(obj) {
     if (obj && obj.__esModule) {
@@ -1341,15 +1458,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
       value: function controller() {
         var ctrl = this;
         ctrl.entry = Entry.VM();
-
-        ctrl.add = function () {
-          console.log(Entry);
-          ctrl.entry.volunteers.push(Entry.volunteerVM());
-        };
-
-        ctrl.remove = function (idx) {
-          ctrl.entry.volunteers.splice(idx, 1);
-        };
+        ctrl.discount = 0;
 
         ctrl.submit = function () {
           Entry.create(ctrl.entry);
@@ -1360,31 +1469,18 @@ else if (typeof define === "function" && define.amd) define(function() {return m
     }, {
       key: 'view',
       value: function view(ctrl) {
-        var that = this;
-        return (0, _mithril2.default)('.entry-form', [(0, _mithril2.default)('h1', 'New Entry'), (0, _mithril2.default)('h3', 'Please enter each volunteer\'s contact information:'), ctrl.entry.volunteers.map(function (volunteer, idx) {
-          return (0, _mithril2.default)('fieldset', [(0, _mithril2.default)('legend', 'Volunteer #' + (idx + 1)), (0, _mithril2.default)('label', 'Name:'), (0, _mithril2.default)('input[type=text]', {
-            value: volunteer.name,
-            onchange: function onchange(e) {
-              volunteer.name = e.currentTarget.value;
-            }
-          }), (0, _mithril2.default)('br'), (0, _mithril2.default)('label', 'Email:'), (0, _mithril2.default)('input[type=text]', {
-            value: volunteer.email,
-            onchange: function onchange(e) {
-              volunteer.email = e.currentTarget.value;
-            }
-          }), that.removeAnchor(ctrl, idx)]);
+        return (0, _mithril2.default)('.entry-form', [(0, _mithril2.default)('h1', 'New Entry'), (0, _mithril2.default)('h3', 'Please enter each volunteer\'s contact information:'), _mithril2.default.component(new _Volunteers2.default(), {
+          volunteers: ctrl.entry.volunteers
+        }), _mithril2.default.component(new _Total2.default(), {
+          count: ctrl.entry.volunteers.length,
+          discount: ctrl.discount
+        }), _mithril2.default.component(new _Coupon2.default(), {
+          onSuccess: function onSuccess(newDiscount) {
+            ctrl.discount = newDiscount;
+          }
         }), (0, _mithril2.default)('button', {
-          onclick: ctrl.add
-        }, 'Add another volunteer'), (0, _mithril2.default)('br'), (0, _mithril2.default)('button', {
           onclick: ctrl.submit
         }, 'Submit')]);
-      }
-    }, {
-      key: 'removeAnchor',
-      value: function removeAnchor(ctrl, idx) {
-        if (ctrl.entry.volunteers.length >= 2) return (0, _mithril2.default)('button', {
-          onclick: ctrl.remove.papp(idx)
-        }, 'remove');
       }
     }]);
 
@@ -1394,7 +1490,7 @@ else if (typeof define === "function" && define.amd) define(function() {return m
   exports.default = EntryForm;
 });
 
-},{"../models/Entry":5,"mithril":1}],4:[function(require,module,exports){
+},{"../components/Coupon":3,"../components/Total":6,"../components/Volunteers":7,"../models/Entry":8,"mithril":1}],5:[function(require,module,exports){
 'use strict';
 
 (function (global, factory) {
@@ -1475,7 +1571,222 @@ else if (typeof define === "function" && define.amd) define(function() {return m
   exports.default = EntryList;
 });
 
-},{"../models/Entry":5,"mithril":1}],5:[function(require,module,exports){
+},{"../models/Entry":8,"mithril":1}],6:[function(require,module,exports){
+'use strict';
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(['exports', 'mithril'], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require('mithril'));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.mithril);
+    global.Total = mod.exports;
+  }
+})(this, function (exports, _mithril) {
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  var _mithril2 = _interopRequireDefault(_mithril);
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = (function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  })();
+
+  var pricePerCount = 10;
+
+  var calcPrice = function calcPrice(discount, count) {
+    var total = count * pricePerCount;
+    return roundCents(total - total * discount);
+  };
+
+  var calcDiscount = function calcDiscount(discount, count) {
+    var total = count * pricePerCount;
+    return roundCents(total * discount);
+  };
+
+  var roundCents = function roundCents(num) {
+    return Math.round(num * 100) / 100;
+  };
+
+  var discountView = function discountView(ctrl, attrs) {
+    if (attrs.discount > 0) {
+      var discountedAmount = calcDiscount(attrs.discount, attrs.count);
+      return (0, _mithril2.default)('span', '(Coupon discount: -$' + discountedAmount + ')');
+    }
+  };
+
+  var Total = (function () {
+    function Total() {
+      _classCallCheck(this, Total);
+    }
+
+    _createClass(Total, [{
+      key: 'view',
+      value: function view(ctrl, attrs) {
+        return (0, _mithril2.default)('.total', [(0, _mithril2.default)('label', 'Total: '), discountView(ctrl, attrs), (0, _mithril2.default)('b', '$' + calcPrice(attrs.discount, attrs.count))]);
+      }
+    }]);
+
+    return Total;
+  })();
+
+  exports.default = Total;
+});
+
+},{"mithril":1}],7:[function(require,module,exports){
+'use strict';
+
+(function (global, factory) {
+  if (typeof define === "function" && define.amd) {
+    define(['exports', 'mithril', '../models/Entry'], factory);
+  } else if (typeof exports !== "undefined") {
+    factory(exports, require('mithril'), require('../models/Entry'));
+  } else {
+    var mod = {
+      exports: {}
+    };
+    factory(mod.exports, global.mithril, global.Entry);
+    global.Volunteers = mod.exports;
+  }
+})(this, function (exports, _mithril, _Entry) {
+  Object.defineProperty(exports, "__esModule", {
+    value: true
+  });
+
+  var _mithril2 = _interopRequireDefault(_mithril);
+
+  var Entry = _interopRequireWildcard(_Entry);
+
+  function _interopRequireWildcard(obj) {
+    if (obj && obj.__esModule) {
+      return obj;
+    } else {
+      var newObj = {};
+
+      if (obj != null) {
+        for (var key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+        }
+      }
+
+      newObj.default = obj;
+      return newObj;
+    }
+  }
+
+  function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : {
+      default: obj
+    };
+  }
+
+  function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  }
+
+  var _createClass = (function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  })();
+
+  var Volunteers = (function () {
+    function Volunteers() {
+      _classCallCheck(this, Volunteers);
+    }
+
+    _createClass(Volunteers, [{
+      key: 'controller',
+      value: function controller(attrs) {
+        var ctrl = this;
+
+        ctrl.add = function () {
+          attrs.volunteers.push(Entry.volunteerVM());
+        };
+
+        ctrl.remove = function (idx) {
+          attrs.volunteers.splice(idx, 1);
+        };
+      }
+    }, {
+      key: 'view',
+      value: function view(ctrl, attrs) {
+        return (0, _mithril2.default)('.volunteers', [attrs.volunteers.map(function (volunteer, idx) {
+          return (0, _mithril2.default)('fieldset', [(0, _mithril2.default)('legend', 'Volunteer #' + (idx + 1)), (0, _mithril2.default)('label', 'Name:'), (0, _mithril2.default)('input[type=text]', {
+            value: volunteer.name,
+            onchange: function onchange(e) {
+              volunteer.name = e.currentTarget.value;
+            }
+          }), (0, _mithril2.default)('br'), (0, _mithril2.default)('label', 'Email:'), (0, _mithril2.default)('input[type=text]', {
+            value: volunteer.email,
+            onchange: function onchange(e) {
+              volunteer.email = e.currentTarget.value;
+            }
+          }), removeAnchor(ctrl, attrs, idx)]);
+        }), (0, _mithril2.default)('button', {
+          onclick: ctrl.add
+        }, 'Add another volunteer')]);
+      }
+    }]);
+
+    return Volunteers;
+  })();
+
+  exports.default = Volunteers;
+
+  var removeAnchor = function removeAnchor(ctrl, attrs, idx) {
+    if (attrs.volunteers.length >= 2) return (0, _mithril2.default)('button', {
+      onclick: ctrl.remove.papp(idx)
+    }, 'remove');
+  };
+});
+
+},{"../models/Entry":8,"mithril":1}],8:[function(require,module,exports){
 'use strict';
 
 (function (global, factory) {
