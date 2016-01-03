@@ -31,6 +31,12 @@ module.exports = function(grunt) {
           transform: ['babelify', 'mithrilify']
         }
       }
+    },
+    watch: {
+      scripts: {
+        files: ["./src/**/*.js"],
+        tasks: ["browserify"]
+      }
     }
   })
 
@@ -38,6 +44,6 @@ module.exports = function(grunt) {
     shell.exec('DEBUG=mithril node dist/bundle.js')
   })
 
-  grunt.registerTask("default", ["browserify"]);
+  grunt.registerTask("default", ["browserify", "watch"]);
   grunt.registerTask("run", ["browserify", "node"])
 }
