@@ -1,0 +1,35 @@
+{
+  "name": "tutorial-mithril-es6",
+  "version": "0.0.1",
+  "description": "Learning Mithril",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "mocha --require mocha-clean --compilers js:babel-core/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chikamichi/tutorial-mithril-es6.git"
+  },
+  "author": "Jean-Denis Vauguet <jd@vauguet.fr>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chikamichi/tutorial-mithril-es6/issues"
+  },
+  "homepage": "https://github.com/chikamichi/tutorial-mithril-es6#readme",
+  "devDependencies": {
+    "babel-plugin-transform-es2015-modules-umd": "^6.3.13",
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-stage-0": "^6.3.13",
+    "babelify": "^7.2.0",
+    "chai": "^3.4.1",
+    "grunt": "^0.4.5",
+    "grunt-babel": "^6.0.0",
+    "grunt-browserify": "^4.0.1",
+    "load-grunt-tasks": "^3.3.0",
+    "mithril": "^0.2.0",
+    "mithrilify": "0.0.6",
+    "mocha": "^2.3.4",
+    "mocha-clean": "^1.0.0",
+    "shelljs": "^0.5.3"
+  }
+}
